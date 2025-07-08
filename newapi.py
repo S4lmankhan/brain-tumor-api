@@ -5,10 +5,14 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import io
+import os
 from huggingface_hub import hf_hub_download
 
 from models.TumorModel import TumorClassification, GliomaStageModel
 from utils import get_precautions_from_gemini
+
+# Create writable cache directory for Hugging Face
+os.makedirs("./cache", exist_ok=True)
 
 # Initialize FastAPI app
 app = FastAPI(title="Brain Tumor Detection API")
@@ -25,7 +29,8 @@ app.add_middleware(
 # Load Tumor Classification Model from Hugging Face
 btd_model_path = hf_hub_download(
     repo_id="Codewithsalty/brain-tumor-models",
-    filename="BTD_model.pth"
+    filename="BTD_model.pth",
+    cache_dir="./cache"  # ✅ fix
 )
 tumor_model = TumorClassification()
 tumor_model.load_state_dict(torch.load(btd_model_path, map_location="cpu"))
@@ -34,7 +39,8 @@ tumor_model.eval()
 # Load Glioma Stage Prediction Model from Hugging Face
 glioma_model_path = hf_hub_download(
     repo_id="Codewithsalty/brain-tumor-models",
-    filename="glioma_stages.pth"
+    filename="glioma_stages.pth",
+    cache_dir="./cache"  # ✅ fix
 )
 glioma_model = GliomaStageModel()
 glioma_model.load_state_dict(torch.load(glioma_model_path, map_location="cpu"))
