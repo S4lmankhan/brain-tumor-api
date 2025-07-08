@@ -20,6 +20,6 @@ def get_precautions_from_gemini(tumor_type):
     precaution_db = {
         "meningioma": "Avoid radiation exposure and get regular check-ups.",
         "pituitary": "Monitor hormonal levels and follow medication strictly.",
-        "no_tumor": "Stay healthy and get annual MRI scans if symptoms appear."
+        "notumor": "Stay healthy and get annual MRI scans if symptoms appear."
     }
     return precaution_db.get(tumor_type, "No specific precautions found.")

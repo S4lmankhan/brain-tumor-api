@@ -101,3 +101,7 @@ async def predict_glioma_stage(data: MutationInput):
         idx = torch.argmax(out, dim=1).item()
         stages = ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4']
         return {"glioma_stage": stages[idx]}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("newapi:app", host="0.0.0.0", port=10000)
