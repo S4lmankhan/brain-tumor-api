@@ -11,13 +11,15 @@ from huggingface_hub import hf_hub_download
 from models.TumorModel import TumorClassification, GliomaStageModel
 from utils import get_precautions_from_gemini
 
-# Use Hugging Face's writable cache directory
-cache_dir = os.getenv("HF_HOME", "/data")
+# ✅ Use Hugging Face's built-in writable cache directory
+cache_dir = "/home/user/.cache/huggingface"
+
+# No need to call os.makedirs — directory already exists
 
 # Initialize FastAPI app
 app = FastAPI(title="Brain Tumor Detection API")
 
-# Enable CORS for all origins
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load Tumor Classification Model from Hugging Face
+# Load tumor classification model
 btd_model_path = hf_hub_download(
     repo_id="Codewithsalty/brain-tumor-models",
     filename="BTD_model.pth",
@@ -36,7 +38,7 @@ tumor_model = TumorClassification()
 tumor_model.load_state_dict(torch.load(btd_model_path, map_location="cpu"))
 tumor_model.eval()
 
-# Load Glioma Stage Prediction Model from Hugging Face
+# Load glioma stage model
 glioma_model_path = hf_hub_download(
     repo_id="Codewithsalty/brain-tumor-models",
     filename="glioma_stages.pth",
@@ -46,7 +48,7 @@ glioma_model = GliomaStageModel()
 glioma_model.load_state_dict(torch.load(glioma_model_path, map_location="cpu"))
 glioma_model.eval()
 
-# Image preprocessing pipeline
+# Image preprocessing
 transform = transforms.Compose([
     transforms.Grayscale(),
     transforms.Resize((224, 224)),
@@ -54,19 +56,17 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5], std=[0.5]),
 ])
 
-# Health check endpoint
 @app.get("/")
 async def root():
     return {"message": "Brain Tumor Detection API is running."}
 
-# Tumor type labels
+# Labels
 labels = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
-# Predict tumor type from uploaded image
 @app.post("/predict-image")
 async def predict_image(file: UploadFile = File(...)):
     img_bytes = await file.read()
-    img = Image.open(io.BytesIO(img_bytes)).convert("L")  # Ensure grayscale
+    img = Image.open(io.BytesIO(img_bytes)).convert("L")
     x = transform(img).unsqueeze(0)
 
     with torch.no_grad():
@@ -80,7 +80,7 @@ async def predict_image(file: UploadFile = File(...)):
         precautions = get_precautions_from_gemini(tumor_type)
         return {"tumor_type": tumor_type, "precaution": precautions}
 
-# Input model for glioma mutation data
+# Mutation input
 class MutationInput(BaseModel):
     gender: str
     age: float
@@ -92,7 +92,6 @@ class MutationInput(BaseModel):
     cic: int
     pik3ca: int
 
-# Predict glioma stage based on mutations
 @app.post("/predict-glioma-stage")
 async def predict_glioma_stage(data: MutationInput):
     gender_val = 0 if data.gender.lower() == 'm' else 1
@@ -108,6 +107,7 @@ async def predict_glioma_stage(data: MutationInput):
         stages = ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4']
         return {"glioma_stage": stages[idx]}
 
+# For local development only
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("newapi:app", host="0.0.0.0", port=10000)
