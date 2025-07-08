@@ -11,13 +11,13 @@ from huggingface_hub import hf_hub_download
 from models.TumorModel import TumorClassification, GliomaStageModel
 from utils import get_precautions_from_gemini
 
-# Create writable cache directory for Hugging Face
-os.makedirs("./cache", exist_ok=True)
+# Use Hugging Face's writable cache directory
+cache_dir = os.getenv("HF_HOME", "/data")
 
 # Initialize FastAPI app
 app = FastAPI(title="Brain Tumor Detection API")
 
-# Enable CORS for all origins (adjust for production)
+# Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,7 +30,7 @@ app.add_middleware(
 btd_model_path = hf_hub_download(
     repo_id="Codewithsalty/brain-tumor-models",
     filename="BTD_model.pth",
-    cache_dir="./cache"  # ✅ fix
+    cache_dir=cache_dir
 )
 tumor_model = TumorClassification()
 tumor_model.load_state_dict(torch.load(btd_model_path, map_location="cpu"))
@@ -40,7 +40,7 @@ tumor_model.eval()
 glioma_model_path = hf_hub_download(
     repo_id="Codewithsalty/brain-tumor-models",
     filename="glioma_stages.pth",
-    cache_dir="./cache"  # ✅ fix
+    cache_dir=cache_dir
 )
 glioma_model = GliomaStageModel()
 glioma_model.load_state_dict(torch.load(glioma_model_path, map_location="cpu"))
