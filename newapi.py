@@ -11,10 +11,9 @@ from huggingface_hub import hf_hub_download
 from models.TumorModel import TumorClassification, GliomaStageModel
 from utils import get_precautions_from_gemini
 
-# ✅ Use Hugging Face's built-in writable cache directory
-cache_dir = "/home/user/.cache/huggingface"
-
-# No need to call os.makedirs — directory already exists
+# ✅ Use a safe local cache dir
+cache_dir = "./hf_cache"
+os.makedirs(cache_dir, exist_ok=True)  # create if it doesn't exist
 
 # Initialize FastAPI app
 app = FastAPI(title="Brain Tumor Detection API")
@@ -107,7 +106,7 @@ async def predict_glioma_stage(data: MutationInput):
         stages = ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4']
         return {"glioma_stage": stages[idx]}
 
-# For local development only
+# Only needed for local development, not in Hugging Face Spaces
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("newapi:app", host="0.0.0.0", port=10000)
